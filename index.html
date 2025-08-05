@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campaign Calculator Pro (Fixed)</title>
-    <script src="https://cdn/tailwindcss.com"></script>
+    <title>Campaign Calculator Pro (Corrected '000' Logic)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -412,11 +412,12 @@
                     pp_cpc: Util.parseCurrency(rowData.pp_cpc), pp_acos_raw: rowData.pp_acos,
                 };
                 
-                const calculatePotentialBid = (cpc, acos_raw, fallback_cpc_1, fallback_cpc_2) => {
+                const calculatePotentialBid = (cpc, acos_raw, primary_fallback_is_000, fallback_cpc_1, fallback_cpc_2) => {
                     if (cpc === null) return null;
                     if (acos_raw === '000') {
                         let calculatedBid;
-                        if (inputs.tos_cpc !== null) {
+                        // Fix: Check if the primary fallback (TOS) is NOT '000'
+                        if (inputs.tos_cpc !== null && !primary_fallback_is_000) {
                             calculatedBid = inputs.tos_cpc / 3;
                         } else if (fallback_cpc_1 !== null) {
                             calculatedBid = fallback_cpc_1 / 2;
@@ -425,18 +426,19 @@
                         } else {
                             return null;
                         }
-                        // Fix: Never result in an increased bid
                         return Math.min(cpc, calculatedBid);
                     }
                     const acos = Util.parsePercentage(acos_raw);
                     if (acos === null) return null;
                     return cpc * (1 - getDecreasePercent(acos));
                 };
+                
+                const tosIs000 = inputs.tos_acos_raw === '000';
 
                 const potentialBids = {
-                    tos: calculatePotentialBid(inputs.tos_cpc, inputs.tos_acos_raw, inputs.ros_cpc, inputs.pp_cpc),
-                    ros: calculatePotentialBid(inputs.ros_cpc, inputs.ros_acos_raw, inputs.tos_cpc, inputs.pp_cpc),
-                    pp: calculatePotentialBid(inputs.pp_cpc, inputs.pp_acos_raw, inputs.tos_cpc, inputs.ros_cpc),
+                    tos: calculatePotentialBid(inputs.tos_cpc, inputs.tos_acos_raw, false, inputs.ros_cpc, inputs.pp_cpc),
+                    ros: calculatePotentialBid(inputs.ros_cpc, inputs.ros_acos_raw, tosIs000, inputs.pp_cpc, null),
+                    pp: calculatePotentialBid(inputs.pp_cpc, inputs.pp_acos_raw, tosIs000, inputs.ros_cpc, null),
                 };
                 
                 const validBids = Object.values(potentialBids).filter(b => b !== null && !isNaN(b));
@@ -811,7 +813,8 @@
                     UI.renderAll();
                 } else if (tab && tab.matches('.add-sheet-btn')) {
                     if (_state.sheets.length < 10) {
-                        _state.sheets.push(Util.createDefaultSheet(`Sheet ${_state.sheets.length + 1}`));
+                        const mainSheetName = _state.sheets.length > 0 ? _state.sheets[0].name : `Sheet ${_state.sheets.length + 1}`;
+                        _state.sheets.push(Util.createDefaultSheet(mainSheetName));
                         _state.activeSheetIndex = _state.sheets.length - 1;
                         State.save();
                         UI.renderAll();
@@ -830,23 +833,23 @@
                     const finishRename = () => {
                         const newName = input.value.trim();
                         if (newName) {
-                            // Fix: Update all sheet names
                             _state.sheets.forEach(sheet => sheet.name = newName);
                             State.save();
                         }
-                        UI.renderSheetTabs();
+                        UI.renderAll();
                     };
                     input.addEventListener('blur', finishRename, { once: true });
                     input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); });
                 }
             },
             handleSheetTitleChange: (e) => {
-                // Fix: Update all sheet names
                 const newName = e.target.value;
-                _state.sheets.forEach(sheet => sheet.name = newName);
-                State.getCurrentSheet().title = newName;
+                _state.sheets.forEach(sheet => {
+                    sheet.name = newName;
+                    sheet.title = newName;
+                });
                 State.save();
-                UI.renderSheetTabs(); // Re-render tabs to show new names
+                UI.renderSheetTabs();
             },
             handleFocus: (input) => {
                 document.querySelectorAll('.active-row').forEach(r => r.classList.remove('active-row'));
@@ -883,18 +886,16 @@
                 const key = e.key;
                 if (!key.startsWith('Arrow') && key !== 'Enter') return;
                 
-                const allInputs = Array.from(e.target.closest('tr').querySelectorAll('.input-cell'));
-                const currentIndex = allInputs.indexOf(e.target);
-                if (currentIndex === -1) return;
+                const allInputsInRow = Array.from(e.target.closest('tr').querySelectorAll('.input-cell'));
+                const currentIndexInRow = allInputsInRow.indexOf(e.target);
+                if (currentIndexInRow === -1) return;
 
                 e.preventDefault();
                 
                 if (key === 'Enter') {
-                    // Fix: Move to the next cell in the same row
-                    if (currentIndex < allInputs.length - 1) {
-                        allInputs[currentIndex + 1].focus();
+                    if (currentIndexInRow < allInputsInRow.length - 1) {
+                        allInputsInRow[currentIndexInRow + 1].focus();
                     } else {
-                         // Optional: move to first cell of next row
                         const nextRow = e.target.closest('tr').nextElementSibling;
                         if (nextRow) nextRow.querySelector('.input-cell')?.focus();
                     }
@@ -907,9 +908,9 @@
                     const prevRow = e.target.closest('tr').previousElementSibling;
                     if (prevRow) prevRow.cells[currentColIndex]?.querySelector('.input-cell')?.focus();
                 } else if (key === 'ArrowLeft' && e.target.selectionStart === 0) {
-                    if (currentIndex > 0) allInputs[currentIndex - 1].focus();
+                    if (currentIndexInRow > 0) allInputsInRow[currentIndexInRow - 1].focus();
                 } else if (key === 'ArrowRight' && e.target.selectionStart === e.target.value.length) {
-                    if (currentIndex < allInputs.length - 1) allInputs[currentIndex + 1].focus();
+                    if (currentIndexInRow < allInputsInRow.length - 1) allInputsInRow[currentIndexInRow + 1].focus();
                 }
             },
             handleCopyResults: (button) => { 
