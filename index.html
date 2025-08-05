@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campaign Calculator Pro (Feature Update)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Campaign Calculator Pro (Fixed)</title>
+    <script src="https://cdn/tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -22,7 +22,13 @@
             --highlight-blue: #1e40af; --highlight-purple: #581c87;
             --adjustment-up-color: #4ade80; --adjustment-down-color: #f87171;
         }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-primary); color: var(--text-primary); transition: background-color 0.3s, color 0.3s; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-primary); 
+            color: var(--text-primary); 
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden; /* Fix: Removes horizontal scrollbar from the page */
+        }
         .main-container { width: 95%; max-width: 2400px; margin: auto; background-color: var(--bg-secondary); }
         .hidden { display: none !important; }
         .tab-content { border: 1px solid var(--border-color); border-top: none; padding: 1.5rem; background-color: var(--bg-secondary); border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; }
@@ -278,7 +284,7 @@
         let _state = {};
         const _history = { stack: [], index: -1, isNavigating: false };
 
-        const STORAGE_KEY = 'campaignCalculatorProData_v4'; // Incremented version
+        const STORAGE_KEY = 'campaignCalculatorProData_v4';
         const DEFAULT_ACOS_LOGIC = [
             { min: 0, max: 30, decrease: 0.00 }, { min: 31, max: 35, decrease: 0.08 },
             { min: 36, max: 40, decrease: 0.20 }, { min: 41, max: 45, decrease: 0.29 },
@@ -406,11 +412,21 @@
                     pp_cpc: Util.parseCurrency(rowData.pp_cpc), pp_acos_raw: rowData.pp_acos,
                 };
                 
-                const calculatePotentialBid = (cpc, acos_raw) => {
+                const calculatePotentialBid = (cpc, acos_raw, fallback_cpc_1, fallback_cpc_2) => {
                     if (cpc === null) return null;
                     if (acos_raw === '000') {
-                        if (inputs.tos_cpc !== null) return inputs.tos_cpc / 3;
-                        return null; // Simplified 000 rule
+                        let calculatedBid;
+                        if (inputs.tos_cpc !== null) {
+                            calculatedBid = inputs.tos_cpc / 3;
+                        } else if (fallback_cpc_1 !== null) {
+                            calculatedBid = fallback_cpc_1 / 2;
+                        } else if (fallback_cpc_2 !== null) {
+                            calculatedBid = fallback_cpc_2 / 2;
+                        } else {
+                            return null;
+                        }
+                        // Fix: Never result in an increased bid
+                        return Math.min(cpc, calculatedBid);
                     }
                     const acos = Util.parsePercentage(acos_raw);
                     if (acos === null) return null;
@@ -418,9 +434,9 @@
                 };
 
                 const potentialBids = {
-                    tos: calculatePotentialBid(inputs.tos_cpc, inputs.tos_acos_raw),
-                    ros: calculatePotentialBid(inputs.ros_cpc, inputs.ros_acos_raw),
-                    pp: calculatePotentialBid(inputs.pp_cpc, inputs.pp_acos_raw),
+                    tos: calculatePotentialBid(inputs.tos_cpc, inputs.tos_acos_raw, inputs.ros_cpc, inputs.pp_cpc),
+                    ros: calculatePotentialBid(inputs.ros_cpc, inputs.ros_acos_raw, inputs.tos_cpc, inputs.pp_cpc),
+                    pp: calculatePotentialBid(inputs.pp_cpc, inputs.pp_acos_raw, inputs.tos_cpc, inputs.ros_cpc),
                 };
                 
                 const validBids = Object.values(potentialBids).filter(b => b !== null && !isNaN(b));
@@ -539,7 +555,7 @@
                     <td class="output-cell ros-adjust">${formatAdjustment(calculations.ros_adjust)}</td>
                     <td class="output-cell pp-adjust">${formatAdjustment(calculations.pp_adjust)}</td>
                     <td>
-                        <button class="action-btn copy-results-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600" title="Copy Results" aria-label="Copy calculated results for this row"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg></button>
+                        <button class="action-btn copy-results-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600" title="Copy Results" aria-label="Copy calculated results for this row"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg></button>
                     </td>
                 `;
                 UI.applyConditionalFormatting(row, rowData);
@@ -814,7 +830,8 @@
                     const finishRename = () => {
                         const newName = input.value.trim();
                         if (newName) {
-                            State.getCurrentSheet().name = newName;
+                            // Fix: Update all sheet names
+                            _state.sheets.forEach(sheet => sheet.name = newName);
                             State.save();
                         }
                         UI.renderSheetTabs();
@@ -823,7 +840,14 @@
                     input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); });
                 }
             },
-            handleSheetTitleChange: (e) => { State.getCurrentSheet().title = e.target.value; State.save(); },
+            handleSheetTitleChange: (e) => {
+                // Fix: Update all sheet names
+                const newName = e.target.value;
+                _state.sheets.forEach(sheet => sheet.name = newName);
+                State.getCurrentSheet().title = newName;
+                State.save();
+                UI.renderSheetTabs(); // Re-render tabs to show new names
+            },
             handleFocus: (input) => {
                 document.querySelectorAll('.active-row').forEach(r => r.classList.remove('active-row'));
                 input.closest('tr').classList.add('active-row');
@@ -859,13 +883,22 @@
                 const key = e.key;
                 if (!key.startsWith('Arrow') && key !== 'Enter') return;
                 
-                const allInputs = Array.from(document.querySelectorAll('#campaign-table-body .input-cell'));
+                const allInputs = Array.from(e.target.closest('tr').querySelectorAll('.input-cell'));
                 const currentIndex = allInputs.indexOf(e.target);
                 if (currentIndex === -1) return;
 
                 e.preventDefault();
                 
-                if (key === 'Enter' || key === 'ArrowDown') {
+                if (key === 'Enter') {
+                    // Fix: Move to the next cell in the same row
+                    if (currentIndex < allInputs.length - 1) {
+                        allInputs[currentIndex + 1].focus();
+                    } else {
+                         // Optional: move to first cell of next row
+                        const nextRow = e.target.closest('tr').nextElementSibling;
+                        if (nextRow) nextRow.querySelector('.input-cell')?.focus();
+                    }
+                } else if (key === 'ArrowDown') {
                     const currentColIndex = e.target.closest('td').cellIndex;
                     const nextRow = e.target.closest('tr').nextElementSibling;
                     if (nextRow) nextRow.cells[currentColIndex]?.querySelector('.input-cell')?.focus();
