@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campaign Calculator Pro (Corrected '000' Logic)</title>
+    <title>Campaign Calculator Pro (Fixed)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -812,8 +812,8 @@
                     UI.renderAll();
                 } else if (tab && tab.matches('.add-sheet-btn')) {
                     if (_state.sheets.length < 10) {
-                        const mainSheetName = `Sheet ${_state.sheets.length + 1}`;
-                        _state.sheets.push(Util.createDefaultSheet(mainSheetName));
+                        const newSheetName = `Sheet ${_state.sheets.length + 1}`;
+                        _state.sheets.push(Util.createDefaultSheet(newSheetName));
                         _state.activeSheetIndex = _state.sheets.length - 1;
                         State.save();
                         UI.renderAll();
@@ -833,6 +833,7 @@
                         const newName = input.value.trim();
                         if (newName) {
                             State.getCurrentSheet().name = newName;
+                            State.getCurrentSheet().title = newName;
                             State.save();
                         }
                         UI.renderAll();
@@ -844,7 +845,9 @@
             handleSheetTitleChange: (e) => {
                 const newName = e.target.value;
                 State.getCurrentSheet().title = newName;
+                State.getCurrentSheet().name = newName;
                 State.save();
+                UI.renderSheetTabs();
             },
             handleFocus: (input) => {
                 document.querySelectorAll('.active-row').forEach(r => r.classList.remove('active-row'));
