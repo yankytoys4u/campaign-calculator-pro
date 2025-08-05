@@ -416,7 +416,6 @@
                     if (cpc === null) return null;
                     if (acos_raw === '000') {
                         let calculatedBid;
-                        // Fix: Check if the primary fallback (TOS) is NOT '000'
                         if (inputs.tos_cpc !== null && !primary_fallback_is_000) {
                             calculatedBid = inputs.tos_cpc / 3;
                         } else if (fallback_cpc_1 !== null) {
@@ -451,9 +450,9 @@
                 
                 return {
                     new_bid: newBid,
-                    tos_adjust: calculateAdjustment(potentialBids.tos, newBid),
-                    ros_adjust: calculateAdjustment(potentialBids.ros, newBid),
-                    pp_adjust: calculateAdjustment(potentialBids.pp, newBid),
+                    tos_adjust: inputs.tos_acos_raw === '000' ? 0 : calculateAdjustment(potentialBids.tos, newBid),
+                    ros_adjust: inputs.ros_acos_raw === '000' ? 0 : calculateAdjustment(potentialBids.ros, newBid),
+                    pp_adjust: inputs.pp_acos_raw === '000' ? 0 : calculateAdjustment(potentialBids.pp, newBid),
                 };
             }
         };
@@ -1130,3 +1129,4 @@
     </script>
 </body>
 </html>
+
