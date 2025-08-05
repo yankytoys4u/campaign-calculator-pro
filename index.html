@@ -320,7 +320,7 @@
             createDefaultSheet: (name) => ({
                 id: Date.now() + Math.random(),
                 name: name,
-                title: `Campaign Group`,
+                title: name, // Start with title matching name
                 data: Array(10).fill(null).map(Util.createDefaultRowData),
                 useCustomSettings: false,
                 settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
@@ -339,7 +339,7 @@
                     _state.defaultSettings = _state.defaultSettings || JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
                     _state.sheets.forEach(sheet => {
                         sheet.id = sheet.id || Date.now() + Math.random();
-                        sheet.title = sheet.title || `Untitled Sheet`;
+                        sheet.title = sheet.title || sheet.name || `Untitled Sheet`;
                         if (sheet.useCustomSettings === undefined) sheet.useCustomSettings = false;
                         sheet.settings = sheet.settings || JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
                         sheet.settings.formattingRules = sheet.settings.formattingRules || [];
@@ -407,34 +407,37 @@
                 };
 
                 const inputs = {
-                    tos_cpc: Util.parseCurrency(rowData.tos_cpc), tos_acos_raw: rowData.tos_acos,
+                    tos_cpc: Util.parseCurrency(rowData.tos_cpc), tos_acos_raw: rowData.tos_acos.trim() || '000', // Fix: Default empty to '000'
                     ros_cpc: Util.parseCurrency(rowData.ros_cpc), ros_acos_raw: rowData.ros_acos,
                     pp_cpc: Util.parseCurrency(rowData.pp_cpc), pp_acos_raw: rowData.pp_acos,
                 };
                 
-                // First, calculate the "normal" potential bid for any non-000 placements
-                const normalBidPP = inputs.pp_acos_raw !== '000' ? (inputs.pp_cpc * (1 - getDecreasePercent(Util.parsePercentage(inputs.pp_acos_raw)))) : null;
-                const normalBidROS = inputs.ros_acos_raw !== '000' ? (inputs.ros_cpc * (1 - getDecreasePercent(Util.parsePercentage(inputs.ros_acos_raw)))) : null;
-                const normalBidTOS = inputs.tos_acos_raw !== '000' ? (inputs.tos_cpc * (1 - getDecreasePercent(Util.parsePercentage(inputs.tos_acos_raw)))) : null;
-
-                const validNormalBids = [normalBidTOS, normalBidROS, normalBidPP].filter(b => b !== null && !isNaN(b));
-                const anchorBid = validNormalBids.length > 0 ? Math.min(...validNormalBids) : null;
-
-                const calculatePotentialBid = (cpc, acos_raw) => {
+                const calculatePotentialBid = (cpc, acos_raw, primary_fallback_is_000, fallback_cpc_1, fallback_cpc_2) => {
                     if (cpc === null) return null;
                     if (acos_raw === '000') {
-                        if (anchorBid !== null) {
-                            return Math.min(cpc, anchorBid / 3);
+                        let calculatedBid;
+                        if (inputs.tos_cpc !== null && !primary_fallback_is_000) {
+                            calculatedBid = inputs.tos_cpc / 3;
+                        } else if (fallback_cpc_1 !== null) {
+                            calculatedBid = fallback_cpc_1 / 2;
+                        } else if (fallback_cpc_2 !== null) {
+                            calculatedBid = fallback_cpc_2 / 2;
+                        } else {
+                            return null;
                         }
-                        return null;
+                        return Math.min(cpc, calculatedBid);
                     }
-                    return cpc * (1 - getDecreasePercent(Util.parsePercentage(acos_raw)));
+                    const acos = Util.parsePercentage(acos_raw);
+                    if (acos === null) return null;
+                    return cpc * (1 - getDecreasePercent(acos));
                 };
+                
+                const tosIs000 = inputs.tos_acos_raw === '000';
 
                 const potentialBids = {
-                    tos: calculatePotentialBid(inputs.tos_cpc, inputs.tos_acos_raw),
-                    ros: calculatePotentialBid(inputs.ros_cpc, inputs.ros_acos_raw),
-                    pp: calculatePotentialBid(inputs.pp_cpc, inputs.pp_acos_raw),
+                    tos: calculatePotentialBid(inputs.tos_cpc, inputs.tos_acos_raw, false, inputs.ros_cpc, inputs.pp_cpc),
+                    ros: calculatePotentialBid(inputs.ros_cpc, inputs.ros_acos_raw, tosIs000, inputs.pp_cpc, null),
+                    pp: calculatePotentialBid(inputs.pp_cpc, inputs.pp_acos_raw, tosIs000, inputs.ros_cpc, null),
                 };
                 
                 const validBids = Object.values(potentialBids).filter(b => b !== null && !isNaN(b));
@@ -809,7 +812,7 @@
                     UI.renderAll();
                 } else if (tab && tab.matches('.add-sheet-btn')) {
                     if (_state.sheets.length < 10) {
-                        const mainSheetName = _state.sheets.length > 0 ? _state.sheets[0].name : `Sheet ${_state.sheets.length + 1}`;
+                        const mainSheetName = `Sheet ${_state.sheets.length + 1}`;
                         _state.sheets.push(Util.createDefaultSheet(mainSheetName));
                         _state.activeSheetIndex = _state.sheets.length - 1;
                         State.save();
@@ -829,7 +832,7 @@
                     const finishRename = () => {
                         const newName = input.value.trim();
                         if (newName) {
-                            _state.sheets.forEach(sheet => sheet.name = newName);
+                            State.getCurrentSheet().name = newName;
                             State.save();
                         }
                         UI.renderAll();
@@ -840,16 +843,13 @@
             },
             handleSheetTitleChange: (e) => {
                 const newName = e.target.value;
-                _state.sheets.forEach(sheet => {
-                    sheet.name = newName;
-                    sheet.title = newName;
-                });
+                State.getCurrentSheet().title = newName;
                 State.save();
-                UI.renderSheetTabs();
             },
             handleFocus: (input) => {
                 document.querySelectorAll('.active-row').forEach(r => r.classList.remove('active-row'));
                 input.closest('tr').classList.add('active-row');
+                input.select();
             },
             handleTableInput: (e) => {
                 if (!e.target.matches('.input-cell')) return;
