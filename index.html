@@ -412,32 +412,29 @@
                     pp_cpc: Util.parseCurrency(rowData.pp_cpc), pp_acos_raw: rowData.pp_acos,
                 };
                 
-                const calculatePotentialBid = (cpc, acos_raw, primary_fallback_is_000, fallback_cpc_1, fallback_cpc_2) => {
+                // First, calculate the "normal" potential bid for any non-000 placements
+                const normalBidPP = inputs.pp_acos_raw !== '000' ? (inputs.pp_cpc * (1 - getDecreasePercent(Util.parsePercentage(inputs.pp_acos_raw)))) : null;
+                const normalBidROS = inputs.ros_acos_raw !== '000' ? (inputs.ros_cpc * (1 - getDecreasePercent(Util.parsePercentage(inputs.ros_acos_raw)))) : null;
+                const normalBidTOS = inputs.tos_acos_raw !== '000' ? (inputs.tos_cpc * (1 - getDecreasePercent(Util.parsePercentage(inputs.tos_acos_raw)))) : null;
+
+                const validNormalBids = [normalBidTOS, normalBidROS, normalBidPP].filter(b => b !== null && !isNaN(b));
+                const anchorBid = validNormalBids.length > 0 ? Math.min(...validNormalBids) : null;
+
+                const calculatePotentialBid = (cpc, acos_raw) => {
                     if (cpc === null) return null;
                     if (acos_raw === '000') {
-                        let calculatedBid;
-                        if (inputs.tos_cpc !== null && !primary_fallback_is_000) {
-                            calculatedBid = inputs.tos_cpc / 3;
-                        } else if (fallback_cpc_1 !== null) {
-                            calculatedBid = fallback_cpc_1 / 2;
-                        } else if (fallback_cpc_2 !== null) {
-                            calculatedBid = fallback_cpc_2 / 2;
-                        } else {
-                            return null;
+                        if (anchorBid !== null) {
+                            return Math.min(cpc, anchorBid / 3);
                         }
-                        return Math.min(cpc, calculatedBid);
+                        return null;
                     }
-                    const acos = Util.parsePercentage(acos_raw);
-                    if (acos === null) return null;
-                    return cpc * (1 - getDecreasePercent(acos));
+                    return cpc * (1 - getDecreasePercent(Util.parsePercentage(acos_raw)));
                 };
-                
-                const tosIs000 = inputs.tos_acos_raw === '000';
 
                 const potentialBids = {
-                    tos: calculatePotentialBid(inputs.tos_cpc, inputs.tos_acos_raw, false, inputs.ros_cpc, inputs.pp_cpc),
-                    ros: calculatePotentialBid(inputs.ros_cpc, inputs.ros_acos_raw, tosIs000, inputs.pp_cpc, null),
-                    pp: calculatePotentialBid(inputs.pp_cpc, inputs.pp_acos_raw, tosIs000, inputs.ros_cpc, null),
+                    tos: calculatePotentialBid(inputs.tos_cpc, inputs.tos_acos_raw),
+                    ros: calculatePotentialBid(inputs.ros_cpc, inputs.ros_acos_raw),
+                    pp: calculatePotentialBid(inputs.pp_cpc, inputs.pp_acos_raw),
                 };
                 
                 const validBids = Object.values(potentialBids).filter(b => b !== null && !isNaN(b));
@@ -1129,4 +1126,3 @@
     </script>
 </body>
 </html>
-
