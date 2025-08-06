@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campaign Calculator Pro (Fixed)</title>
+    <title>Campaign Calculator Pro (Final Revisions)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -27,17 +27,18 @@
             background-color: var(--bg-primary); 
             color: var(--text-primary); 
             transition: background-color 0.3s, color 0.3s;
-            overflow-x: hidden; /* Fix: Removes horizontal scrollbar from the page */
+            overflow-x: hidden;
         }
         .main-container { width: 95%; max-width: 2400px; margin: auto; background-color: var(--bg-secondary); }
         .hidden { display: none !important; }
         .tab-content { border: 1px solid var(--border-color); border-top: none; padding: 1.5rem; background-color: var(--bg-secondary); border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; }
-        .sheet-title { font-size: 1.875rem; font-weight: 700; border: 2px solid transparent; border-radius: 0.5rem; padding: 0.25rem 0.5rem; margin-bottom: 1rem; width: 100%; background-color: transparent; color: var(--text-primary); transition: all 0.2s ease; }
+        .sheet-title-container { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .sheet-title { font-size: 1.875rem; font-weight: 700; border: 2px solid transparent; border-radius: 0.5rem; padding: 0.25rem 0.5rem; background-color: transparent; color: var(--text-primary); transition: all 0.2s ease; flex-grow: 1; }
         .sheet-title:hover { border-color: var(--border-color); }
         .sheet-title:focus { border-color: var(--brand-color); outline: none; background-color: var(--bg-tertiary); }
+        .sheet-link-input { width: 40%; }
         .table-container { overflow-x: auto; }
         th { position: sticky; top: 0; z-index: 10; background-color: var(--bg-tertiary); }
-        /* Lightened Campaign Name Header */
         .header-campaign-name { background-color: #f9fafb; }
         .dark .header-campaign-name { background-color: #374151; }
         td, th { padding: 8px; border: 1px solid var(--border-color); text-align: center; white-space: nowrap; position: relative; }
@@ -45,7 +46,7 @@
         .input-cell:focus { outline: none; border-color: var(--brand-color); box-shadow: 0 0 0 2px var(--brand-color-light); }
         .campaign-name-input { width: 450px; }
         .campaign-name-cell-container { display: flex; align-items: center; gap: 0.5rem; }
-        .link-icon { color: var(--brand-color); cursor: pointer; display: none; }
+        .link-icon { color: var(--brand-color); cursor: pointer; }
         .output-cell { font-weight: 600; color: #312e81; background-color: #eef2ff; }
         .dark .output-cell { background-color: #3730a3; color: #e0e7ff; }
         .header-tos { background-color: #bae6fd; color: #0c4a6e;} .col-tos { background-color: #f0f9ff; }
@@ -82,6 +83,7 @@
         .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--brand-color); }
         input:checked + .slider:before { transform: translateX(26px); }
+        .settings-section.disabled { opacity: 0.5; pointer-events: none; }
     </style>
 </head>
 <body class="p-4 md:p-6 lg:p-8">
@@ -138,7 +140,10 @@
         <div id="calculator-view" class="tab-content">
             <div id="sheet-tabs-container" class="sheet-tabs"></div>
             <div id="sheet-content" class="pt-4">
-                <input type="text" id="sheet-title-input" class="sheet-title" value="Sheet Title" aria-label="Sheet Title">
+                <div class="sheet-title-container">
+                    <input type="text" id="sheet-title-input" class="sheet-title" value="Sheet Title" aria-label="Sheet Title">
+                    <input type="text" id="sheet-link-input" class="input-cell sheet-link-input" placeholder="Paste link for this sheet...">
+                </div>
                 <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
                     <div id="bulk-actions-container" class="flex gap-4 items-center">
                         <button id="delete-selected-btn" class="btn btn-danger" disabled>Delete Selected</button>
@@ -171,7 +176,7 @@
                                 <th class="header-output">TOS Adjust</th>
                                 <th class="header-output">ROS Adjust</th>
                                 <th class="header-output">PP Adjust</th>
-                                <th class="header-output">Actions</th>
+                                <th class="header-output">Link</th>
                             </tr>
                         </thead>
                         <tbody id="campaign-table-body"></tbody>
@@ -185,20 +190,27 @@
     </template>
     
     <template id="instructions-view-template">
-        <div id="instructions-view" class="tab-content prose dark:prose-invert lg:prose-xl max-w-none">
-            <h2>Welcome to Campaign Calculator Pro!</h2>
-            <p>This tool is designed to streamline your campaign bid adjustments. Here’s how to use its powerful features:</p>
-            <h3>Core Functionality</h3>
-            <ul>
-                <li><strong>Data Entry:</strong> Fill in the CPC and ACOS % for each placement: Top of Search (TOS), Rest of Search (ROS), and Product Pages (PP).</li>
-                <li><strong>Calculations:</strong> The tool instantly calculates a final <strong>New Bid</strong> (the lowest potential bid across all placements) and then shows the percentage <strong>Increase</strong> needed for the other placements to match their ideal bids.</li>
-                <li><strong>Undo/Redo:</strong> Use the Undo/Redo buttons or Ctrl+Z/Ctrl+Y to reverse your actions.</li>
-            </ul>
-            <h3>Sheet Management</h3>
-            <ul>
-                <li><strong>Multiple Sheets:</strong> You can work with multiple separate sheets. Click a tab to switch, the <strong>+</strong> button to add, or the <strong>×</strong> to delete (with confirmation).</li>
-                <li><strong>Custom Settings:</strong> Go to the Settings tab to define Global Default rules. You can then choose to override these defaults for any specific sheet by enabling "Use Custom Settings". A ⚙️ icon will appear on the sheet tab as a reminder.</li>
-            </ul>
+        <div id="instructions-view" class="tab-content">
+            <div class="prose dark:prose-invert lg:prose-xl max-w-none">
+                <h2>Welcome to Campaign Calculator Pro!</h2>
+                <p>This tool is designed to streamline your campaign bid adjustments. Here’s how to use its powerful features:</p>
+                <h3>Core Functionality</h3>
+                <ul>
+                    <li><strong>Data Entry:</strong> Fill in the CPC and ACOS % for each placement: Top of Search (TOS), Rest of Search (ROS), and Product Pages (PP).</li>
+                    <li><strong>Calculations:</strong> The tool instantly calculates a final <strong>New Bid</strong> (the lowest potential bid across all placements) and then shows the percentage <strong>Increase</strong> needed for the other placements to match their ideal bids.</li>
+                    <li><strong>Undo/Redo:</strong> Use the Undo/Redo buttons or Ctrl+Z/Ctrl+Y to reverse your actions.</li>
+                </ul>
+                <h3>Sheet Management</h3>
+                <ul>
+                    <li><strong>Multiple Sheets:</strong> You can work with multiple separate sheets. Click a tab to switch, the <strong>+</strong> button to add, or the <strong>×</strong> to delete (with confirmation).</li>
+                    <li><strong>Custom Settings:</strong> Go to the Settings tab to define Global Default rules. You can then choose to override these defaults for any specific sheet by enabling "Use Custom Settings". A ⚙️ icon will appear on the sheet tab as a reminder.</li>
+                </ul>
+            </div>
+            <hr class="my-8" style="border-color: var(--border-color);">
+            <div>
+                <h3 class="text-xl font-bold mb-4">My Notes</h3>
+                <textarea id="notes-textarea" class="w-full p-2 border rounded-md h-64" style="background-color: var(--bg-tertiary); border-color: var(--border-color);" placeholder="Type your personal notes here... they will be saved automatically."></textarea>
+            </div>
         </div>
     </template>
 
@@ -207,7 +219,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Column 1: Global/Sheet Settings -->
                 <div class="lg:col-span-2 space-y-6">
-                    <div id="global-settings-container" class="p-4 border rounded-lg" style="border-color: var(--border-color);">
+                    <div id="global-settings-container" class="p-4 border rounded-lg settings-section" style="border-color: var(--border-color);">
                         <h3 class="text-xl font-bold mb-4">Global Default Settings</h3>
                         <p class="text-sm text-gray-500 mb-4">These settings apply to all sheets unless custom settings are enabled for a specific sheet.</p>
                         <div class="space-y-6">
@@ -234,7 +246,7 @@
                                 </label>
                             </div>
                         </div>
-                        <div id="custom-settings-editors" class="hidden space-y-6">
+                        <div id="custom-settings-editors" class="hidden space-y-6 settings-section">
                              <div>
                                 <h4 class="text-lg font-semibold mb-3">Custom ACOS Logic Table</h4>
                                 <div id="sheet-acos-logic-table-container"></div>
@@ -246,6 +258,7 @@
                                 <button id="add-sheet-formatting-rule-btn" class="btn mt-3 w-full">Add Rule</button>
                             </div>
                         </div>
+                         <p id="using-global-settings-msg" class="text-center text-gray-500 p-4 bg-gray-50 dark:bg-gray-800 rounded-md">This sheet is currently using the Global Default Settings.</p>
                     </div>
                 </div>
                 <!-- Column 2: Presets -->
@@ -257,7 +270,7 @@
                             <input type="text" id="preset-name-input" placeholder="New Preset Name" class="input-cell flex-grow">
                             <button id="save-preset-btn" class="btn btn-primary">Save</button>
                         </div>
-                        <p class="text-xs text-gray-500">Saves the currently active settings (Global or this Sheet's custom settings) as a new preset.</p>
+                        <p id="save-preset-desc" class="text-xs text-gray-500">Saves the currently active settings as a new preset.</p>
                     </div>
                     <hr class="my-6" style="border-color: var(--border-color);">
                     <div class="space-y-4">
@@ -284,7 +297,7 @@
         let _state = {};
         const _history = { stack: [], index: -1, isNavigating: false };
 
-        const STORAGE_KEY = 'campaignCalculatorProData_v4';
+        const STORAGE_KEY = 'campaignCalculatorProData_v5';
         const DEFAULT_ACOS_LOGIC = [
             { min: 0, max: 30, decrease: 0.00 }, { min: 31, max: 35, decrease: 0.08 },
             { min: 36, max: 40, decrease: 0.20 }, { min: 41, max: 45, decrease: 0.29 },
@@ -313,14 +326,15 @@
             formatPercentage: (value) => (value === null || isNaN(value)) ? '' : `${value}%`,
             isValidURL: (string) => { try { new URL(string); return true; } catch (_) { return false; } },
             createDefaultRowData: () => ({ 
-                id: Date.now() + Math.random(), selected: false, name: '', 
+                id: Date.now() + Math.random(), selected: false, name: '', link: '',
                 tos_cpc: '', tos_acos: '', ros_cpc: '', ros_acos: '', pp_cpc: '', pp_acos: '', 
                 highlight: 'none' 
             }),
             createDefaultSheet: (name) => ({
                 id: Date.now() + Math.random(),
                 name: name,
-                title: name, // Start with title matching name
+                title: name,
+                link: '',
                 data: Array(10).fill(null).map(Util.createDefaultRowData),
                 useCustomSettings: false,
                 settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
@@ -337,21 +351,25 @@
                     _state.theme = _state.theme || 'light';
                     _state.presets = _state.presets || {};
                     _state.defaultSettings = _state.defaultSettings || JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+                    _state.notes = _state.notes || '';
                     _state.sheets.forEach(sheet => {
                         sheet.id = sheet.id || Date.now() + Math.random();
                         sheet.title = sheet.title || sheet.name || `Untitled Sheet`;
+                        sheet.link = sheet.link || '';
                         if (sheet.useCustomSettings === undefined) sheet.useCustomSettings = false;
                         sheet.settings = sheet.settings || JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
                         sheet.settings.formattingRules = sheet.settings.formattingRules || [];
                         sheet.data.forEach(row => { 
                             row.highlight = row.highlight || 'none'; 
+                            row.link = row.link || '';
                         });
                     });
                 } else {
                     _state = {
                         theme: 'light', activeMainTab: 'calculator', activeSheetIndex: 0, sheets: [],
                         presets: { "Default": JSON.parse(JSON.stringify(DEFAULT_SETTINGS)) },
-                        defaultSettings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
+                        defaultSettings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
+                        notes: ''
                     };
                     _state.sheets.push(Util.createDefaultSheet('Sheet 1'));
                 }
@@ -407,7 +425,7 @@
                 };
 
                 const inputs = {
-                    tos_cpc: Util.parseCurrency(rowData.tos_cpc), tos_acos_raw: rowData.tos_acos.trim() || '000', // Fix: Default empty to '000'
+                    tos_cpc: Util.parseCurrency(rowData.tos_cpc), tos_acos_raw: rowData.tos_acos.trim() || '000',
                     ros_cpc: Util.parseCurrency(rowData.ros_cpc), ros_acos_raw: rowData.ros_acos,
                     pp_cpc: Util.parseCurrency(rowData.pp_cpc), pp_acos_raw: rowData.pp_acos,
                 };
@@ -482,6 +500,9 @@
                     } else if (_state.activeMainTab === 'settings') {
                         UI.renderSettings();
                         Events.addSettingsEventListeners();
+                    } else if (_state.activeMainTab === 'instructions') {
+                        Util.getEl('notes-textarea').value = _state.notes;
+                        Events.addInstructionsEventListeners();
                     }
                 }
                 document.querySelectorAll('#main-tabs-container .sheet-tab').forEach(tab => {
@@ -514,6 +535,7 @@
                 if (!currentSheet) return;
                 
                 Util.getEl('sheet-title-input').value = currentSheet.title;
+                Util.getEl('sheet-link-input').value = currentSheet.link;
                 const tableBody = Util.getEl('campaign-table-body');
                 tableBody.innerHTML = '';
                 currentSheet.data.forEach((rowData, index) => {
@@ -541,8 +563,7 @@
                     <td><input type="checkbox" class="row-checkbox" ${rowData.selected ? 'checked' : ''} aria-label="Select row ${rowIndex + 1}"></td>
                     <td>
                         <div class="campaign-name-cell-container">
-                            <input type="text" class="input-cell campaign-name-input" placeholder="Campaign Name or URL" data-col-key="name" value="${rowData.name || ''}">
-                            <a class="link-icon" target="_blank" rel="noopener noreferrer" aria-label="Open campaign link"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-4.5 0V6.75A2.25 2.25 0 0115.75 4.5h1.5m-3 0h3m-3 0a2.25 2.25 0 00-2.25 2.25v1.5m3 0a2.25 2.25 0 002.25-2.25v-1.5m-6 6.75h6.75" /></svg></a>
+                            <input type="text" class="input-cell campaign-name-input" placeholder="Campaign Name" data-col-key="name" value="${rowData.name || ''}">
                         </div>
                     </td>
                     <td class="col-tos"><input type="text" class="input-cell cpc-input" data-col-key="tos_cpc" placeholder="$0.00" value="${rowData.tos_cpc || ''}"></td>
@@ -555,12 +576,14 @@
                     <td class="output-cell tos-adjust">${formatAdjustment(calculations.tos_adjust)}</td>
                     <td class="output-cell ros-adjust">${formatAdjustment(calculations.ros_adjust)}</td>
                     <td class="output-cell pp-adjust">${formatAdjustment(calculations.pp_adjust)}</td>
-                    <td>
-                        <button class="action-btn copy-results-btn p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600" title="Copy Results" aria-label="Copy calculated results for this row"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg></button>
+                    <td class="link-cell">
+                        <div class="campaign-name-cell-container">
+                            <input type="text" class="input-cell" placeholder="Link" data-col-key="link" value="${rowData.link || ''}">
+                            <a class="link-icon" target="_blank" rel="noopener noreferrer" aria-label="Open link"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-4.5 0V6.75A2.25 2.25 0 0115.75 4.5h1.5m-3 0h3m-3 0a2.25 2.25 0 00-2.25 2.25v1.5m3 0a2.25 2.25 0 002.25-2.25v-1.5m-6 6.75h6.75" /></svg></a>
+                        </div>
                     </td>
                 `;
                 UI.applyConditionalFormatting(row, rowData);
-                UI.updateCampaignLink(row.querySelector('.campaign-name-input'));
                 return row;
             },
             updateRowCalculations: (rowEl) => {
@@ -612,15 +635,6 @@
                     }
                 }
             },
-            updateCampaignLink: (input) => { 
-                const linkIcon = input.closest('.campaign-name-cell-container').querySelector('.link-icon');
-                if (Util.isValidURL(input.value)) {
-                    linkIcon.href = input.value;
-                    linkIcon.style.display = 'inline-block';
-                } else {
-                    linkIcon.style.display = 'none';
-                }
-            },
             showToast: (message, duration = 3000) => {
                 const toast = Util.getEl('toast-container');
                 toast.textContent = message;
@@ -668,6 +682,8 @@
                 const useCustomToggle = Util.getEl('use-custom-settings-toggle');
                 useCustomToggle.checked = currentSheet.useCustomSettings;
                 Util.getEl('custom-settings-editors').classList.toggle('hidden', !currentSheet.useCustomSettings);
+                Util.getEl('using-global-settings-msg').classList.toggle('hidden', currentSheet.useCustomSettings);
+                Util.getEl('global-settings-container').classList.toggle('disabled', currentSheet.useCustomSettings);
                 
                 UI.renderAcosLogicTable('global', _state.defaultSettings.acosLogic);
                 UI.renderConditionalFormattingTable('global', _state.defaultSettings.formattingRules);
@@ -750,6 +766,7 @@
                 view.querySelector('#sheet-tabs-container').addEventListener('click', Events.handleSheetTabClick);
                 view.querySelector('#sheet-tabs-container').addEventListener('dblclick', Events.handleSheetTabDoubleClick);
                 view.querySelector('#sheet-title-input').addEventListener('blur', Events.handleSheetTitleChange);
+                view.querySelector('#sheet-link-input').addEventListener('change', Events.handleSheetLinkChange);
                 view.querySelector('#add-row-btn').addEventListener('click', Events.handleAddRow);
                 view.querySelector('#select-all-checkbox').addEventListener('change', Events.handleSelectAll);
                 view.querySelector('#delete-selected-btn').addEventListener('click', Events.handleDeleteSelected);
@@ -774,14 +791,23 @@
                     }
                 });
                 tableBody.addEventListener('click', (e) => {
-                    const copyBtn = e.target.closest('.copy-results-btn');
-                    if (copyBtn) Events.handleCopyResults(copyBtn);
+                    const linkIcon = e.target.closest('.link-icon');
+                    if (linkIcon) {
+                        const url = linkIcon.closest('.campaign-name-cell-container').querySelector('input').value;
+                        if(Util.isValidURL(url)) window.open(url, '_blank');
+                    }
                 });
             },
             addSettingsEventListeners: () => {
                 const settingsView = Util.getEl('settings-view');
                 settingsView.addEventListener('change', Events.handleSettingsChange);
                 settingsView.addEventListener('click', Events.handleSettingsClick);
+            },
+            addInstructionsEventListeners: () => {
+                Util.getEl('notes-textarea').addEventListener('input', (e) => {
+                    _state.notes = e.target.value;
+                    State.save(false);
+                });
             },
             handleMainTabClick: (e) => {
                 if (e.target.matches('.sheet-tab[data-tab]')) {
@@ -849,6 +875,10 @@
                 State.save();
                 UI.renderSheetTabs();
             },
+            handleSheetLinkChange: (e) => {
+                State.getCurrentSheet().link = e.target.value;
+                State.save();
+            },
             handleFocus: (input) => {
                 document.querySelectorAll('.active-row').forEach(r => r.classList.remove('active-row'));
                 input.closest('tr').classList.add('active-row');
@@ -860,7 +890,6 @@
                 const rowIndex = parseInt(row.dataset.rowIndex);
                 const colKey = e.target.dataset.colKey;
                 State.getCurrentSheet().data[rowIndex][colKey] = e.target.value;
-                if(colKey === 'name') UI.updateCampaignLink(e.target);
                 UI.updateRowCalculations(row);
                 State.save(false);
             },
