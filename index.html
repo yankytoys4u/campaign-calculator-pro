@@ -309,11 +309,47 @@
 
         const STORAGE_KEY = 'campaignCalculatorProData_v5';
         const DEFAULT_ACOS_LOGIC = [
-            { min: 0, max: 30, decrease: 0.00 }, { min: 31, max: 35, decrease: 0.08 },
-            { min: 36, max: 40, decrease: 0.20 }, { min: 41, max: 45, decrease: 0.29 },
-            { min: 46, max: 50, decrease: 0.37 }, { min: 51, max: 54, decrease: 0.44 },
-            { min: 55, max: 59, decrease: 0.48 }, { min: 60, max: 69, decrease: 0.55 },
-            { min: 70, max: 79, decrease: 0.60 }, { min: 80, max: 999, decrease: 0.65 }
+            { min: 30, max: 30, decrease: 0.00 }, { min: 31, max: 31, decrease: 0.0323 }, { min: 32, max: 32, decrease: 0.0625 },
+            { min: 33, max: 33, decrease: 0.0909 }, { min: 34, max: 34, decrease: 0.1176 }, { min: 35, max: 35, decrease: 0.1429 },
+            { min: 36, max: 36, decrease: 0.1667 }, { min: 37, max: 37, decrease: 0.1892 }, { min: 38, max: 38, decrease: 0.2105 },
+            { min: 39, max: 39, decrease: 0.2308 }, { min: 40, max: 40, decrease: 0.25 }, { min: 41, max: 41, decrease: 0.2683 },
+            { min: 42, max: 42, decrease: 0.2857 }, { min: 43, max: 43, decrease: 0.3023 }, { min: 44, max: 44, decrease: 0.3182 },
+            { min: 45, max: 45, decrease: 0.3333 }, { min: 46, max: 46, decrease: 0.3478 }, { min: 47, max: 47, decrease: 0.3617 },
+            { min: 48, max: 48, decrease: 0.375 }, { min: 49, max: 49, decrease: 0.3878 }, { min: 50, max: 50, decrease: 0.40 },
+            { min: 51, max: 51, decrease: 0.4118 }, { min: 52, max: 52, decrease: 0.4231 }, { min: 53, max: 53, decrease: 0.4340 },
+            { min: 54, max: 54, decrease: 0.4444 }, { min: 55, max: 55, decrease: 0.4545 }, { min: 56, max: 56, decrease: 0.4643 },
+            { min: 57, max: 57, decrease: 0.4737 }, { min: 58, max: 58, decrease: 0.4828 }, { min: 59, max: 59, decrease: 0.4915 },
+            { min: 60, max: 60, decrease: 0.50 }, { min: 61, max: 61, decrease: 0.5082 }, { min: 62, max: 62, decrease: 0.5161 },
+            { min: 63, max: 63, decrease: 0.5238 }, { min: 64, max: 64, decrease: 0.5312 }, { min: 65, max: 65, decrease: 0.5385 },
+            { min: 66, max: 66, decrease: 0.5455 }, { min: 67, max: 67, decrease: 0.5522 }, { min: 68, max: 68, decrease: 0.5588 },
+            { min: 69, max: 69, decrease: 0.5652 }, { min: 70, max: 70, decrease: 0.5714 }, { min: 71, max: 71, decrease: 0.5775 },
+            { min: 72, max: 72, decrease: 0.5833 }, { min: 73, max: 73, decrease: 0.5890 }, { min: 74, max: 74, decrease: 0.5946 },
+            { min: 75, max: 75, decrease: 0.60 }, { min: 76, max: 76, decrease: 0.6053 }, { min: 77, max: 77, decrease: 0.6104 },
+            { min: 78, max: 78, decrease: 0.6154 }, { min: 79, max: 79, decrease: 0.6203 }, { min: 80, max: 80, decrease: 0.6250 },
+            { min: 81, max: 81, decrease: 0.6296 }, { min: 82, max: 82, decrease: 0.6341 }, { min: 83, max: 83, decrease: 0.6386 },
+            { min: 84, max: 84, decrease: 0.6429 }, { min: 85, max: 85, decrease: 0.6471 }, { min: 86, max: 86, decrease: 0.6512 },
+            { min: 87, max: 87, decrease: 0.6552 }, { min: 88, max: 88, decrease: 0.6591 }, { min: 89, max: 89, decrease: 0.6629 },
+            { min: 90, max: 90, decrease: 0.6667 }, { min: 91, max: 91, decrease: 0.6703 }, { min: 92, max: 92, decrease: 0.6739 },
+            { min: 93, max: 93, decrease: 0.6774 }, { min: 94, max: 94, decrease: 0.6809 }, { min: 95, max: 95, decrease: 0.6842 },
+            { min: 96, max: 96, decrease: 0.6875 }, { min: 97, max: 97, decrease: 0.6907 }, { min: 98, max: 98, decrease: 0.6939 },
+            { min: 99, max: 99, decrease: 0.6970 }, { min: 100, max: 100, decrease: 0.70 }, { min: 101, max: 101, decrease: 0.7030 },
+            { min: 102, max: 102, decrease: 0.7059 }, { min: 103, max: 103, decrease: 0.7087 }, { min: 104, max: 104, decrease: 0.7115 },
+            { min: 105, max: 105, decrease: 0.7143 }, { min: 106, max: 106, decrease: 0.7170 }, { min: 107, max: 107, decrease: 0.7196 },
+            { min: 108, max: 108, decrease: 0.7222 }, { min: 109, max: 109, decrease: 0.7248 }, { min: 110, max: 110, decrease: 0.7273 },
+            { min: 111, max: 111, decrease: 0.7297 }, { min: 112, max: 112, decrease: 0.7321 }, { min: 113, max: 113, decrease: 0.7345 },
+            { min: 114, max: 114, decrease: 0.7368 }, { min: 115, max: 115, decrease: 0.7391 }, { min: 116, max: 116, decrease: 0.7414 },
+            { min: 117, max: 117, decrease: 0.7436 }, { min: 118, max: 118, decrease: 0.7458 }, { min: 119, max: 119, decrease: 0.7479 },
+            { min: 120, max: 120, decrease: 0.75 }, { min: 121, max: 121, decrease: 0.7521 }, { min: 122, max: 122, decrease: 0.7541 },
+            { min: 123, max: 123, decrease: 0.7561 }, { min: 124, max: 124, decrease: 0.7581 }, { min: 125, max: 125, decrease: 0.76 },
+            { min: 126, max: 126, decrease: 0.7619 }, { min: 127, max: 127, decrease: 0.7638 }, { min: 128, max: 128, decrease: 0.7656 },
+            { min: 129, max: 129, decrease: 0.7674 }, { min: 130, max: 130, decrease: 0.7692 }, { min: 131, max: 131, decrease: 0.7710 },
+            { min: 132, max: 132, decrease: 0.7727 }, { min: 133, max: 133, decrease: 0.7744 }, { min: 134, max: 134, decrease: 0.7761 },
+            { min: 135, max: 135, decrease: 0.7778 }, { min: 136, max: 136, decrease: 0.7794 }, { min: 137, max: 137, decrease: 0.7810 },
+            { min: 138, max: 138, decrease: 0.7826 }, { min: 139, max: 139, decrease: 0.7842 }, { min: 140, max: 140, decrease: 0.7857 },
+            { min: 141, max: 141, decrease: 0.7872 }, { min: 142, max: 142, decrease: 0.7887 }, { min: 143, max: 143, decrease: 0.7902 },
+            { min: 144, max: 144, decrease: 0.7917 }, { min: 145, max: 145, decrease: 0.7931 }, { min: 146, max: 146, decrease: 0.7945 },
+            { min: 147, max: 147, decrease: 0.7959 }, { min: 148, max: 148, decrease: 0.7973 }, { min: 149, max: 149, decrease: 0.7987 },
+            { min: 150, max: 150, decrease: 0.80 }
         ];
         const DEFAULT_SETTINGS = {
             acosLogic: JSON.parse(JSON.stringify(DEFAULT_ACOS_LOGIC)),
@@ -431,7 +467,7 @@
                 const getDecreasePercent = (acos) => {
                     if (acos === null || isNaN(acos)) return 0;
                     const rule = acosLogic.find(r => acos >= r.min && acos <= r.max);
-                    return rule ? rule.decrease : (acosLogic[acosLogic.length - 1]?.decrease || 0.65);
+                    return rule ? rule.decrease : 0;
                 };
 
                 const inputs = {
