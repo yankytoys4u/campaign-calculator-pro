@@ -1109,15 +1109,13 @@
                     }
                 } else if (target.id === 'delete-preset-btn') {
                     const name = Util.getEl('load-preset-select').value;
-                    if (name && name !== "Default") {
+                    if (name) {
                         UI.showConfirmationModal(`Are you sure you want to delete the "${name}" preset?`, () => {
                             delete _state.presets[name];
                             UI.showToast(`Preset "${name}" deleted.`);
                             State.save();
                             UI.renderSettings();
                         });
-                    } else if (name === "Default") {
-                        UI.showToast("Cannot delete the Default preset.", 4000);
                     }
                 }
                 State.save();
