@@ -307,7 +307,7 @@
         const _history = { stack: [], index: -1, isNavigating: false };
         let _activeSettingsSheetIndex = null;
 
-        const STORAGE_KEY = 'campaignCalculatorProData_v6'; // Incremented version to force fresh start
+        const STORAGE_KEY = 'campaignCalculatorProData_v6'; // Updated to ensure fresh start
         const DEFAULT_ACOS_LOGIC = [
             { min: 30, max: 30, decrease: 0.00 }, { min: 31, max: 31, decrease: 0.0323 }, { min: 32, max: 32, decrease: 0.0625 },
             { min: 33, max: 33, decrease: 0.0909 }, { min: 34, max: 34, decrease: 0.1176 }, { min: 35, max: 35, decrease: 0.1429 },
@@ -393,7 +393,7 @@
                 const savedState = localStorage.getItem(STORAGE_KEY);
                 if (savedState) {
                     _state = JSON.parse(savedState);
-                    // --- Data Migration & Validation ---
+                    // --- Data Validation ---
                     _state.theme = _state.theme || 'light';
                     _state.presets = _state.presets || {};
                     _state.defaultSettings = _state.defaultSettings || JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
@@ -423,12 +423,7 @@
             },
             save: (record = true) => {
                 if (record) State.recordHistory();
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(_state));
-                } catch (e) {
-                    console.error("Error saving state:", e);
-                    UI.showToast("Error saving data.", 5000);
-                }
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(_state));
             },
             recordHistory: () => {
                 if (_history.isNavigating) return;
@@ -442,7 +437,7 @@
                     _history.isNavigating = true;
                     _history.index--;
                     _state = JSON.parse(_history.stack[_history.index]);
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(_state));
+                    State.save(false);
                     UI.renderAll();
                     _history.isNavigating = false;
                 }
@@ -452,7 +447,7 @@
                     _history.isNavigating = true;
                     _history.index++;
                     _state = JSON.parse(_history.stack[_history.index]);
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(_state));
+                    State.save(false);
                     UI.renderAll();
                     _history.isNavigating = false;
                 }
@@ -728,6 +723,7 @@
             },
             renderAcosLogicTable: (prefix, rules) => {
                 const container = Util.getEl(`${prefix}-acos-logic-table-container`);
+                if (!container) return;
                 container.innerHTML = `<div class="grid grid-cols-4 gap-2 font-semibold mb-2 px-2"><span>Min %</span><span>Max %</span><span>Decr %</span><span></span></div>`;
                 rules.forEach((rule, index) => {
                     const div = document.createElement('div');
@@ -743,6 +739,7 @@
             },
             renderConditionalFormattingTable: (prefix, rules) => {
                 const container = Util.getEl(`${prefix}-conditional-formatting-container`);
+                if (!container) return;
                 container.innerHTML = `<div class="grid grid-cols-5 gap-2 font-semibold mb-2 px-2 text-xs"><span>Column</span><span>Op</span><span>Value</span><span>Color</span><span></span></div>`;
                 rules.forEach((rule, index) => {
                     const div = document.createElement('div');
@@ -761,6 +758,7 @@
             },
             renderPresets: () => {
                 const select = Util.getEl('load-preset-select');
+                if (!select) return;
                 select.innerHTML = Object.keys(_state.presets).map(p => `<option value="${p}">${p}</option>`).join('');
             },
         };
@@ -768,6 +766,7 @@
         const Events = {
             init: () => {
                 Events.addGlobalEventListeners();
+                State.load();
                 UI.renderAll();
             },
             addGlobalEventListeners: () => {
@@ -1056,7 +1055,7 @@
                 event.target.value = '';
             },
             handleCsvExport: () => { 
-                const headers = ['name', 'tos_cpc', 'tos_acos', 'ros_cpc', 'ros_acos', 'pp_cpc', 'pp_acos', 'new_bid', 'tos_adjust', 'ros_adjust', 'pp_adjust'];
+                const headers = ['name', 'link', 'tos_cpc', 'tos_acos', 'ros_cpc', 'ros_acos', 'pp_cpc', 'pp_acos', 'new_bid', 'tos_adjust', 'ros_adjust', 'pp_adjust'];
                 let csvContent = headers.join(',') + '\n';
                 
                 const dataToExport = State.getCurrentSheet().data.map(rowData => {
@@ -1140,7 +1139,6 @@
                             });
                             UI.showToast(`Preset applied to all sheets.`);
                             State.save();
-                            UI.renderAll();
                         });
                     }
                 } else if (target.id === 'delete-preset-btn') {
@@ -1150,7 +1148,6 @@
                             delete _state.presets[name];
                             UI.showToast(`Preset "${name}" deleted.`);
                             State.save();
-                            UI.renderSettings();
                         });
                     }
                 }
@@ -1217,7 +1214,6 @@
                     }
                 }
                 State.save();
-                UI.renderAll();
                 Events.openSheetSettingsModal();
             },
             handleSheetSettingsModalClick: (e) => {
@@ -1249,7 +1245,6 @@
                 }
                 
                 State.save();
-                UI.renderAll();
                 Events.openSheetSettingsModal();
             },
         };
