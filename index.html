@@ -220,17 +220,64 @@
         <div id="instructions-view" class="tab-content">
             <div class="prose dark:prose-invert lg:prose-xl max-w-none">
                 <h2>Welcome to Campaign Calculator Pro!</h2>
-                <p>This tool is designed to streamline your campaign bid adjustments. Here’s how to use its powerful features:</p>
-                <h3>Core Functionality</h3>
+                <p>Campaign Calculator Pro is a live-syncing, multi-sheet tool designed to automate and optimize your Amazon ad campaign bid adjustments. Because this app is connected to the cloud, any changes you make are saved instantly.</p>
+                <p>Here is the complete manual on how to use every feature of the system.</p>
+                <hr style="border-color: var(--border-color);" class="my-6">
+                
+                <h3>1. Data Entry (What to Put Everywhere)</h3>
+                <p>To get accurate bid adjustments, you need to enter your current campaign data into the corresponding columns.</p>
                 <ul>
-                    <li><strong>Data Entry:</strong> Fill in the CPC and ACOS % for each placement: Top of Search (TOS), Rest of Search (ROS), Product Pages (PP), Business (Bus), and Audience (Aud).</li>
-                    <li><strong>Calculations:</strong> The tool instantly calculates a final <strong>New Bid</strong> (the lowest potential bid across TOS, ROS, and PP). It then shows the percentage <strong>Increase</strong> needed for the other placements. Note: Business and Audience increases are calculated based on the highest target bid among TOS, ROS, and PP.</li>
-                    <li><strong>Live Sync:</strong> Data is saved to the cloud automatically. Changes you make will be visible to anyone else viewing the page instantly!</li>
+                    <li><strong>Campaign Name & Link:</strong> Paste the name of your campaign and its Amazon URL. Clicking the link icon next to the URL will open the campaign in a new tab.</li>
+                    <li><strong>Core Placements (TOS, ROS, PP):</strong> Enter your current Cost Per Click (CPC) and ACOS % for Top of Search, Rest of Search, and Product Pages.</li>
+                    <li><strong>Additional Placements (Bus, Aud):</strong> Enter your current CPC and ACOS % for Business and Audience placements.</li>
                 </ul>
-                <h3>Sheet Management</h3>
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg my-4 border border-blue-100 dark:border-blue-800">
+                    <h4 class="font-bold text-blue-800 dark:text-blue-300 m-0">Handling "Zero Sales" or "No Data" (The <code>000</code> Rule)</h4>
+                    <p class="m-0 mt-2 text-sm text-blue-900 dark:text-blue-200">If you have a placement with clicks but zero sales, enter its CPC and type <strong><code>000</code></strong> in the ACOS column. If a placement has no data at all, simply leave both the CPC and ACOS columns completely <strong>blank</strong>. Both actions will trigger the Safety Fallback (explained below) to protect your ad spend.</p>
+                </div>
+
+                <h3>2. The Calculation Engine (How the Math Works)</h3>
+                <p>Once you enter your data, the system calculates your new bids in three distinct phases:</p>
+                
+                <h4>Phase A: Determining Target Bids</h4>
+                <p>The system looks at the ACOS logic table (found in your Settings) to determine the "Target Bid" for every placement. For example, if your ACOS is high, the logic table will dictate a percentage decrease to your current CPC to find the ideal target bid.</p>
+                
+                <h4>Phase B: The Base "New Bid" & The Safety Fallback</h4>
+                <p>The calculator establishes a single foundational <strong>New Bid</strong> for the campaign by looking at your core placements (TOS, ROS, and PP).</p>
                 <ul>
-                    <li><strong>Multiple Sheets:</strong> You can work with multiple separate sheets. Click a tab to switch, the <strong>+</strong> button to add, or the <strong>×</strong> to delete (with confirmation).</li>
-                    <li><strong>Custom Settings:</strong> Go to the Settings tab to define Global Default rules. You can then choose to override these defaults for any specific sheet by enabling "Use Custom Settings". A ⚙️ icon will appear on the sheet tab as a reminder.</li>
+                    <li><strong>Standard Scenario:</strong> It selects the <em>lowest</em> target bid among TOS, ROS, and PP.</li>
+                    <li><strong>The Safety Fallback (1/3 Rule):</strong> If <em>any</em> of your core placements are left completely blank or have an ACOS of <code>000</code>, the system automatically activates the safety fallback. It takes your <em>highest</em> valid core target bid and divides it by 3. This severely reduced number becomes your base "New Bid" to ensure you don't overspend on failing or unknown placements.</li>
+                </ul>
+
+                <h4>Phase C: Calculating The Adjustments (What It Spits Out)</h4>
+                <p>Now that the base New Bid is set, the system calculates the exact percentage increases needed for the other placements.</p>
+                <ul>
+                    <li><strong>Core Adjustments (TOS, ROS, PP):</strong> The system outputs the exact percentage increase required to bridge the gap between the base New Bid and that specific placement's target bid.</li>
+                    <li><strong>Business & Audience Adjustments:</strong> Amazon handles Business and Audience multipliers differently. Therefore, the percentage increases for Business and Audience are calculated against the <em>highest target bid</em> among your core placements, ensuring the math perfectly aligns with Amazon's ad console logic.</li>
+                </ul>
+
+                <h3>3. Sheet Management & Settings</h3>
+                <p>You can work with multiple separate sheets to organize different brands, portfolios, or strategies.</p>
+                <ul>
+                    <li><strong>Tabs:</strong> Click the <strong>+</strong> icon to create a new sheet (up to 10). Click the <strong>x</strong> to delete one.</li>
+                    <li><strong>Renaming:</strong> Double-click any sheet tab's name to rename it.</li>
+                    <li><strong>Global vs. Custom Settings:</strong> By default, all sheets use the Global Default Settings (configured in the main Settings tab). However, you can click the ⚙️ icon on any sheet tab to enable "Custom Settings" specifically for that sheet, allowing you to run different ACOS logic rules for different campaigns.</li>
+                </ul>
+
+                <h3>4. Import / Export Data (CSV)</h3>
+                <p>You can easily move data in and out of the calculator using CSV files.</p>
+                <ul>
+                    <li><strong>Exporting:</strong> Click <strong>Export CSV</strong> to instantly download the current sheet's data. The export will include all your inputs as well as the calculated outputs (New Bid and Adjustments).</li>
+                    <li><strong>Importing:</strong> Click <strong>Import CSV</strong> to upload a file. The system will map the data exactly to the columns.</li>
+                    <li><em>Note on Import formatting:</em> Your CSV must contain the data in this exact order to map correctly: Name, Link, TOS CPC, TOS ACOS, ROS CPC, ROS ACOS, PP CPC, PP ACOS, Bus CPC, Bus ACOS, Aud CPC, Aud ACOS, etc.</li>
+                </ul>
+
+                <h3>5. Bulk Actions & Formatting</h3>
+                <ul>
+                    <li><strong>Bulk Checkboxes:</strong> Use the checkboxes on the left side of the table (or the "Select All" box in the header) to select multiple campaigns.</li>
+                    <li><strong>Delete / Copy:</strong> Once selected, use the buttons at the top to delete or duplicate rows instantly.</li>
+                    <li><strong>Highlight Palette:</strong> When rows are selected, a color palette will appear at the top. Click a color to manually highlight specific campaigns for easy tracking.</li>
+                    <li><strong>Conditional Formatting:</strong> Go to the Settings tab to create automated color rules (e.g., "If TOS ACOS > 40%, turn row red").</li>
                 </ul>
             </div>
             <hr class="my-8" style="border-color: var(--border-color);">
@@ -472,60 +519,65 @@
 
                 const inputs = {
                     tos_cpc: Util.parseCurrency(rowData.tos_cpc), tos_acos_raw: rowData.tos_acos ? rowData.tos_acos.trim() : '',
-                    ros_cpc: Util.parseCurrency(rowData.ros_cpc), ros_acos_raw: rowData.ros_acos,
-                    pp_cpc: Util.parseCurrency(rowData.pp_cpc), pp_acos_raw: rowData.pp_acos,
-                    bus_cpc: Util.parseCurrency(rowData.bus_cpc), bus_acos_raw: rowData.bus_acos,
-                    aud_cpc: Util.parseCurrency(rowData.aud_cpc), aud_acos_raw: rowData.aud_acos,
+                    ros_cpc: Util.parseCurrency(rowData.ros_cpc), ros_acos_raw: rowData.ros_acos ? rowData.ros_acos.trim() : '',
+                    pp_cpc: Util.parseCurrency(rowData.pp_cpc), pp_acos_raw: rowData.pp_acos ? rowData.pp_acos.trim() : '',
+                    bus_cpc: Util.parseCurrency(rowData.bus_cpc), bus_acos_raw: rowData.bus_acos ? rowData.bus_acos.trim() : '',
+                    aud_cpc: Util.parseCurrency(rowData.aud_cpc), aud_acos_raw: rowData.aud_acos ? rowData.aud_acos.trim() : '',
                 };
                 
-                if (inputs.tos_acos_raw === '') inputs.tos_acos_raw = '000';
-                
-                const calculatePotentialBid = (cpc, acos_raw, primary_fallback_is_000, fallback_cpc_1, fallback_cpc_2) => {
-                    if (cpc === null) return null;
-                    if (acos_raw === '000') {
-                        let calculatedBid;
-                        if (inputs.tos_cpc !== null && !primary_fallback_is_000) {
-                            calculatedBid = inputs.tos_cpc / 3;
-                        } else if (fallback_cpc_1 !== null) {
-                            calculatedBid = fallback_cpc_1 / 2;
-                        } else if (fallback_cpc_2 !== null) {
-                            calculatedBid = fallback_cpc_2 / 2;
-                        } else {
-                            return null;
-                        }
-                        return Math.min(cpc, calculatedBid);
-                    }
+                const getTargetBid = (cpc, acos_raw) => {
+                    if (cpc === null || acos_raw === '' || acos_raw === '000') return null;
                     const acos = Util.parsePercentage(acos_raw);
                     if (acos === null) return null;
                     return cpc * (1 - getDecreasePercent(acos));
                 };
-                
-                const tosIs000 = inputs.tos_acos_raw === '000';
 
-                const potentialBids = {
-                    tos: calculatePotentialBid(inputs.tos_cpc, inputs.tos_acos_raw, false, inputs.ros_cpc, inputs.pp_cpc),
-                    ros: calculatePotentialBid(inputs.ros_cpc, inputs.ros_acos_raw, tosIs000, inputs.pp_cpc, null),
-                    pp: calculatePotentialBid(inputs.pp_cpc, inputs.pp_acos_raw, tosIs000, inputs.ros_cpc, null),
-                    bus: calculatePotentialBid(inputs.bus_cpc, inputs.bus_acos_raw, false, null, null),
-                    aud: calculatePotentialBid(inputs.aud_cpc, inputs.aud_acos_raw, false, null, null),
+                const targetBids = {
+                    tos: getTargetBid(inputs.tos_cpc, inputs.tos_acos_raw),
+                    ros: getTargetBid(inputs.ros_cpc, inputs.ros_acos_raw),
+                    pp: getTargetBid(inputs.pp_cpc, inputs.pp_acos_raw),
+                    bus: getTargetBid(inputs.bus_cpc, inputs.bus_acos_raw),
+                    aud: getTargetBid(inputs.aud_cpc, inputs.aud_acos_raw),
                 };
-                
-                const coreBids = [potentialBids.tos, potentialBids.ros, potentialBids.pp].filter(b => b !== null && !isNaN(b));
-                const newBid = coreBids.length > 0 ? Math.min(...coreBids) : null;
-                const highestCoreBid = coreBids.length > 0 ? Math.max(...coreBids) : null;
 
-                const calculateAdjustment = (potentialBid, finalBid) => {
-                    if (potentialBid === null || finalBid === null || finalBid <= 0) return null;
-                    return ((potentialBid / finalBid) - 1) * 100;
-                };
+                const coreTargets = [targetBids.tos, targetBids.ros, targetBids.pp].filter(b => b !== null && !isNaN(b));
+                const highestCoreBid = coreTargets.length > 0 ? Math.max(...coreTargets) : null;
+
+                const isCoreBlankOr000 = (cpc, acos_raw) => (cpc === null || acos_raw === '' || acos_raw === '000');
                 
+                const anyCoreBlankOr000 = isCoreBlankOr000(inputs.tos_cpc, inputs.tos_acos_raw) || 
+                                          isCoreBlankOr000(inputs.ros_cpc, inputs.ros_acos_raw) || 
+                                          isCoreBlankOr000(inputs.pp_cpc, inputs.pp_acos_raw);
+
+                let newBid = null;
+                if (anyCoreBlankOr000) {
+                    if (highestCoreBid !== null) {
+                        newBid = highestCoreBid / 3;
+                    }
+                } else {
+                    if (coreTargets.length > 0) {
+                        newBid = Math.min(...coreTargets);
+                    }
+                }
+
+                const calculateAdjustment = (target, base) => {
+                    if (target === null || base === null || base <= 0) return null;
+                    return ((target / base) - 1) * 100;
+                };
+
+                const getDisplayAdjustment = (cpc, acos_raw, targetBid, baseBid) => {
+                    if (cpc === null && acos_raw === '') return null; // Completely blank -> show nothing
+                    if (acos_raw === '000' || acos_raw === '') return 0; // Partial data or 000 -> show 0%
+                    return calculateAdjustment(targetBid, baseBid);
+                };
+
                 return {
                     new_bid: newBid,
-                    tos_adjust: inputs.tos_acos_raw === '000' ? 0 : calculateAdjustment(potentialBids.tos, newBid),
-                    ros_adjust: inputs.ros_acos_raw === '000' ? 0 : calculateAdjustment(potentialBids.ros, newBid),
-                    pp_adjust: inputs.pp_acos_raw === '000' ? 0 : calculateAdjustment(potentialBids.pp, newBid),
-                    bus_adjust: inputs.bus_acos_raw === '000' ? 0 : calculateAdjustment(potentialBids.bus, highestCoreBid),
-                    aud_adjust: inputs.aud_acos_raw === '000' ? 0 : calculateAdjustment(potentialBids.aud, highestCoreBid),
+                    tos_adjust: getDisplayAdjustment(inputs.tos_cpc, inputs.tos_acos_raw, targetBids.tos, newBid),
+                    ros_adjust: getDisplayAdjustment(inputs.ros_cpc, inputs.ros_acos_raw, targetBids.ros, newBid),
+                    pp_adjust: getDisplayAdjustment(inputs.pp_cpc, inputs.pp_acos_raw, targetBids.pp, newBid),
+                    bus_adjust: getDisplayAdjustment(inputs.bus_cpc, inputs.bus_acos_raw, targetBids.bus, highestCoreBid),
+                    aud_adjust: getDisplayAdjustment(inputs.aud_cpc, inputs.aud_acos_raw, targetBids.aud, highestCoreBid),
                 };
             }
         };
@@ -1046,9 +1098,9 @@
                         if (values.length < 7) return null; 
                         return {
                             id: Date.now() + Math.random(), selected: false,
-                            name: values[0] || '', tos_cpc: values[1] || '', tos_acos: values[2] || '',
-                            ros_cpc: values[3] || '', ros_acos: values[4] || '', pp_cpc: values[5] || '', pp_acos: values[6] || '',
-                            bus_cpc: values[7] || '', bus_acos: values[8] || '', aud_cpc: values[9] || '', aud_acos: values[10] || '',
+                            name: values[0] || '', link: values[1] || '', tos_cpc: values[2] || '', tos_acos: values[3] || '',
+                            ros_cpc: values[4] || '', ros_acos: values[5] || '', pp_cpc: values[6] || '', pp_acos: values[7] || '',
+                            bus_cpc: values[8] || '', bus_acos: values[9] || '', aud_cpc: values[10] || '', aud_acos: values[11] || '',
                             highlight: 'none'
                         };
                     }).filter(d => d && d.name);
