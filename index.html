@@ -52,8 +52,10 @@
         .header-tos { background-color: #bae6fd; color: #0c4a6e;} .col-tos { background-color: #f0f9ff; }
         .header-ros { background-color: #bbf7d0; color: #14532d;} .col-ros { background-color: #f0fdf4; }
         .header-pp { background-color: #fde68a; color: #78350f;} .col-pp { background-color: #fefce8; }
+        .header-bus { background-color: #fed7aa; color: #7c2d12;} .col-bus { background-color: #fff7ed; }
+        .header-aud { background-color: #99f6e4; color: #134e4a;} .col-aud { background-color: #f0fdfa; }
         .header-output { background-color: #e0e7ff; color: #312e81; }
-        .dark .col-tos { background-color: #0c4a6e; } .dark .col-ros { background-color: #14532d; } .dark .col-pp { background-color: #78350f; }
+        .dark .col-tos { background-color: #0c4a6e; } .dark .col-ros { background-color: #14532d; } .dark .col-pp { background-color: #78350f; } .dark .col-bus { background-color: #7c2d12; } .dark .col-aud { background-color: #134e4a; }
         .adjustment-up { color: var(--adjustment-up-color); } .adjustment-down { color: var(--adjustment-down-color); }
         .sheet-tabs { display: flex; border-bottom: 2px solid var(--border-color); flex-wrap: wrap; }
         .sheet-tab { display: flex; align-items: center; gap: 0.5rem; padding: 10px 16px; cursor: pointer; border: 1px solid transparent; border-bottom: none; margin-bottom: -2px; color: var(--text-secondary); font-weight: 500; transition: all 0.2s ease; }
@@ -193,10 +195,14 @@
                                 <th class="header-tos">TOS CPC</th><th class="header-tos">TOS ACOS %</th>
                                 <th class="header-ros">ROS CPC</th><th class="header-ros">ROS ACOS %</th>
                                 <th class="header-pp">PP CPC</th><th class="header-pp">PP ACOS %</th>
+                                <th class="header-bus">Bus CPC</th><th class="header-bus">Bus ACOS %</th>
+                                <th class="header-aud">Aud CPC</th><th class="header-aud">Aud ACOS %</th>
                                 <th class="header-output">New Bid</th>
                                 <th class="header-output">TOS Adjust</th>
                                 <th class="header-output">ROS Adjust</th>
                                 <th class="header-output">PP Adjust</th>
+                                <th class="header-output">Bus Adjust</th>
+                                <th class="header-output">Aud Adjust</th>
                                 <th class="header-output">Link</th>
                             </tr>
                         </thead>
@@ -217,8 +223,8 @@
                 <p>This tool is designed to streamline your campaign bid adjustments. Here’s how to use its powerful features:</p>
                 <h3>Core Functionality</h3>
                 <ul>
-                    <li><strong>Data Entry:</strong> Fill in the CPC and ACOS % for each placement: Top of Search (TOS), Rest of Search (ROS), and Product Pages (PP).</li>
-                    <li><strong>Calculations:</strong> The tool instantly calculates a final <strong>New Bid</strong> (the lowest potential bid across all placements) and then shows the percentage <strong>Increase</strong> needed for the other placements to match their ideal bids.</li>
+                    <li><strong>Data Entry:</strong> Fill in the CPC and ACOS % for each placement: Top of Search (TOS), Rest of Search (ROS), Product Pages (PP), Business (Bus), and Audience (Aud).</li>
+                    <li><strong>Calculations:</strong> The tool instantly calculates a final <strong>New Bid</strong> (the lowest potential bid across TOS, ROS, and PP). It then shows the percentage <strong>Increase</strong> needed for the other placements. Note: Business and Audience increases are calculated based on the highest target bid among TOS, ROS, and PP.</li>
                     <li><strong>Live Sync:</strong> Data is saved to the cloud automatically. Changes you make will be visible to anyone else viewing the page instantly!</li>
                 </ul>
                 <h3>Sheet Management</h3>
@@ -374,6 +380,7 @@
             createDefaultRowData: () => ({
                 id: Date.now() + Math.random(), selected: false, name: '', link: '',
                 tos_cpc: '', tos_acos: '', ros_cpc: '', ros_acos: '', pp_cpc: '', pp_acos: '',
+                bus_cpc: '', bus_acos: '', aud_cpc: '', aud_acos: '',
                 highlight: 'none'
             }),
             createDefaultSheet: (name) => ({
@@ -467,6 +474,8 @@
                     tos_cpc: Util.parseCurrency(rowData.tos_cpc), tos_acos_raw: rowData.tos_acos ? rowData.tos_acos.trim() : '',
                     ros_cpc: Util.parseCurrency(rowData.ros_cpc), ros_acos_raw: rowData.ros_acos,
                     pp_cpc: Util.parseCurrency(rowData.pp_cpc), pp_acos_raw: rowData.pp_acos,
+                    bus_cpc: Util.parseCurrency(rowData.bus_cpc), bus_acos_raw: rowData.bus_acos,
+                    aud_cpc: Util.parseCurrency(rowData.aud_cpc), aud_acos_raw: rowData.aud_acos,
                 };
                 
                 if (inputs.tos_acos_raw === '') inputs.tos_acos_raw = '000';
@@ -497,10 +506,13 @@
                     tos: calculatePotentialBid(inputs.tos_cpc, inputs.tos_acos_raw, false, inputs.ros_cpc, inputs.pp_cpc),
                     ros: calculatePotentialBid(inputs.ros_cpc, inputs.ros_acos_raw, tosIs000, inputs.pp_cpc, null),
                     pp: calculatePotentialBid(inputs.pp_cpc, inputs.pp_acos_raw, tosIs000, inputs.ros_cpc, null),
+                    bus: calculatePotentialBid(inputs.bus_cpc, inputs.bus_acos_raw, false, null, null),
+                    aud: calculatePotentialBid(inputs.aud_cpc, inputs.aud_acos_raw, false, null, null),
                 };
                 
-                const validBids = Object.values(potentialBids).filter(b => b !== null && !isNaN(b));
-                const newBid = validBids.length > 0 ? Math.min(...validBids) : null;
+                const coreBids = [potentialBids.tos, potentialBids.ros, potentialBids.pp].filter(b => b !== null && !isNaN(b));
+                const newBid = coreBids.length > 0 ? Math.min(...coreBids) : null;
+                const highestCoreBid = coreBids.length > 0 ? Math.max(...coreBids) : null;
 
                 const calculateAdjustment = (potentialBid, finalBid) => {
                     if (potentialBid === null || finalBid === null || finalBid <= 0) return null;
@@ -512,6 +524,8 @@
                     tos_adjust: inputs.tos_acos_raw === '000' ? 0 : calculateAdjustment(potentialBids.tos, newBid),
                     ros_adjust: inputs.ros_acos_raw === '000' ? 0 : calculateAdjustment(potentialBids.ros, newBid),
                     pp_adjust: inputs.pp_acos_raw === '000' ? 0 : calculateAdjustment(potentialBids.pp, newBid),
+                    bus_adjust: inputs.bus_acos_raw === '000' ? 0 : calculateAdjustment(potentialBids.bus, highestCoreBid),
+                    aud_adjust: inputs.aud_acos_raw === '000' ? 0 : calculateAdjustment(potentialBids.aud, highestCoreBid),
                 };
             }
         };
@@ -617,10 +631,16 @@
                     <td class="col-ros"><input type="text" class="input-cell acos-input" data-col-key="ros_acos" placeholder="0%" value="${rowData.ros_acos || ''}"></td>
                     <td class="col-pp"><input type="text" class="input-cell cpc-input" data-col-key="pp_cpc" placeholder="$0.00" value="${rowData.pp_cpc || ''}"></td>
                     <td class="col-pp"><input type="text" class="input-cell acos-input" data-col-key="pp_acos" placeholder="0%" value="${rowData.pp_acos || ''}"></td>
+                    <td class="col-bus"><input type="text" class="input-cell cpc-input" data-col-key="bus_cpc" placeholder="$0.00" value="${rowData.bus_cpc || ''}"></td>
+                    <td class="col-bus"><input type="text" class="input-cell acos-input" data-col-key="bus_acos" placeholder="0%" value="${rowData.bus_acos || ''}"></td>
+                    <td class="col-aud"><input type="text" class="input-cell cpc-input" data-col-key="aud_cpc" placeholder="$0.00" value="${rowData.aud_cpc || ''}"></td>
+                    <td class="col-aud"><input type="text" class="input-cell acos-input" data-col-key="aud_acos" placeholder="0%" value="${rowData.aud_acos || ''}"></td>
                     <td class="output-cell new-bid">${Util.formatCurrency(calculations.new_bid)}</td>
                     <td class="output-cell tos-adjust">${formatAdjustment(calculations.tos_adjust)}</td>
                     <td class="output-cell ros-adjust">${formatAdjustment(calculations.ros_adjust)}</td>
                     <td class="output-cell pp-adjust">${formatAdjustment(calculations.pp_adjust)}</td>
+                    <td class="output-cell bus-adjust">${formatAdjustment(calculations.bus_adjust)}</td>
+                    <td class="output-cell aud-adjust">${formatAdjustment(calculations.aud_adjust)}</td>
                     <td class="link-cell">
                         <div class="campaign-name-cell-container">
                             <input type="text" class="input-cell" placeholder="Link" data-col-key="link" value="${rowData.link || ''}">
@@ -651,6 +671,8 @@
                 rowEl.querySelector('.tos-adjust').innerHTML = formatAdjustment(calculations.tos_adjust);
                 rowEl.querySelector('.ros-adjust').innerHTML = formatAdjustment(calculations.ros_adjust);
                 rowEl.querySelector('.pp-adjust').innerHTML = formatAdjustment(calculations.pp_adjust);
+                rowEl.querySelector('.bus-adjust').innerHTML = formatAdjustment(calculations.bus_adjust);
+                rowEl.querySelector('.aud-adjust').innerHTML = formatAdjustment(calculations.aud_adjust);
                 
                 UI.applyConditionalFormatting(rowEl, rowData);
             },
@@ -751,8 +773,8 @@
                 rules.forEach((rule, index) => {
                     const div = document.createElement('div');
                     div.className = 'grid grid-cols-5 gap-2 items-center mb-1';
-                    const columns = ['name', 'tos_cpc', 'tos_acos', 'ros_cpc', 'ros_acos', 'pp_cpc', 'pp_acos', 'new_bid', 'tos_adjust', 'ros_adjust', 'pp_adjust'];
-                    const operators = ['>', '<', '=', '!=', 'contains', 'no-contain'];
+                    const columns = ['name', 'tos_cpc', 'tos_acos', 'ros_cpc', 'ros_acos', 'pp_cpc', 'pp_acos', 'bus_cpc', 'bus_acos', 'aud_cpc', 'aud_acos', 'new_bid', 'tos_adjust', 'ros_adjust', 'pp_adjust', 'bus_adjust', 'aud_adjust'];
+                    const operators = ['>', '<', '=', '!=', 'contains', 'does not contain'];
                     div.innerHTML = `
                         <select data-index="${index}" data-field="column" class="input-cell w-full formatting-rule-input" data-prefix="${prefix}">${columns.map(c => `<option value="${c}" ${rule.column === c ? 'selected' : ''}>${c}</option>`).join('')}</select>
                         <select data-index="${index}" data-field="operator" class="input-cell w-full formatting-rule-input" data-prefix="${prefix}">${operators.map(o => `<option value="${o}" ${rule.operator === o ? 'selected' : ''}>${o}</option>`).join('')}</select>
@@ -1020,11 +1042,13 @@
                     const rows = text.split(/[\r\n]+/).slice(1);
                     const importedData = rows.map(rowStr => {
                         const values = rowStr.split(',');
-                        if (values.length < 7) return null;
+                        // Backward compatibility for old CSVs vs new CSVs
+                        if (values.length < 7) return null; 
                         return {
                             id: Date.now() + Math.random(), selected: false,
                             name: values[0] || '', tos_cpc: values[1] || '', tos_acos: values[2] || '',
                             ros_cpc: values[3] || '', ros_acos: values[4] || '', pp_cpc: values[5] || '', pp_acos: values[6] || '',
+                            bus_cpc: values[7] || '', bus_acos: values[8] || '', aud_cpc: values[9] || '', aud_acos: values[10] || '',
                             highlight: 'none'
                         };
                     }).filter(d => d && d.name);
@@ -1042,7 +1066,7 @@
                 event.target.value = '';
             },
             handleCsvExport: () => {
-                const headers = ['name', 'link', 'tos_cpc', 'tos_acos', 'ros_cpc', 'ros_acos', 'pp_cpc', 'pp_acos', 'new_bid', 'tos_adjust', 'ros_adjust', 'pp_adjust'];
+                const headers = ['name', 'link', 'tos_cpc', 'tos_acos', 'ros_cpc', 'ros_acos', 'pp_cpc', 'pp_acos', 'bus_cpc', 'bus_acos', 'aud_cpc', 'aud_acos', 'new_bid', 'tos_adjust', 'ros_adjust', 'pp_adjust', 'bus_adjust', 'aud_adjust'];
                 let csvContent = headers.join(',') + '\n';
                 
                 const dataToExport = State.getCurrentSheet().data.map(rowData => {
